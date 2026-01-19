@@ -6,6 +6,7 @@ import (
 	"log"
 	"math/rand"
 	"time"
+
 	"github.com/FilledEther20/Leaderboard/internal/config"
 	"github.com/FilledEther20/Leaderboard/internal/models"
 	"github.com/brianvoe/gofakeit/v6"
@@ -17,15 +18,14 @@ const seedCount = 10000
 
 func Run(db *gorm.DB, rdb *redis.Client) {
 	ctx := context.Background()
-	var count int64
-	db.Model(&models.User{}).Count(&count)
-	if count >= seedCount {
-		log.Println("Seed already exists, skipping.")
-		return
+	log.Println("Cleaning Up...")
+
+	rdb.Del(ctx, config.LeaderboardKey)
+	if err := db.Exec("TRUNCATE TABLE users RESTART IDENTITY CASCADE").Error; err != nil {
+		log.Fatalf("Failed to truncate table: %v", err)
 	}
 
-	log.Println("Seeding users...")
-
+	log.Println("Seeding users ...")
 	gofakeit.Seed(time.Now().UnixNano())
 
 	users := make([]models.User, 0, 1000)

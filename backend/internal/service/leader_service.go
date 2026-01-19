@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"log"
 	"math/rand"
 
 	"github.com/FilledEther20/Leaderboard/internal/repository"
@@ -73,13 +74,16 @@ func (s *LeaderboardService) Search(ctx context.Context, q string) ([]UserRankRe
 
 func (s *LeaderboardService) SimulateUpdate(ctx context.Context) error {
 	user, err := s.repo.UserLeaderboard.Random(ctx)
+	log.Default().Printf("User's old rating is %d", user.Rating)
 	if err != nil {
 		return err
 	}
 
 	newRating := rand.Intn(4901) + 100
 	_ = s.repo.Leaderboard.UpdateScore(ctx, user.Username, float64(newRating))
-
-	go s.repo.UserLeaderboard.UpdateRating(ctx, user.ID, newRating)
+	log.Default().Printf("User's new rating is %d", newRating)
+	go func(){
+		s.repo.UserLeaderboard.UpdateRating(ctx, user.ID, newRating)
+	}()
 	return nil
 }

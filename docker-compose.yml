@@ -1,0 +1,25 @@
+version: '3.8'
+services:
+  app:
+    build: ./backend
+    ports:
+      - "8080:8080"
+    depends_on:
+      - redis
+      - postgres
+    environment:
+      - REDIS_ADDR=redis:6379
+      - POSTGRES_DSN=host=postgres user=postgres password=postgres dbname=leaderboard port=5432 sslmode=disable
+    
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+  
+  postgres:
+    image: postgres:alpine
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: leaderboard
+    ports:
+      - "5432:5432"
