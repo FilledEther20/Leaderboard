@@ -34,11 +34,18 @@ func (h *Handler) Search(c *gin.Context) {
 		c.JSON(400, gin.H{"error": "q required"})
 		return
 	}
-	resp, _ := h.service.Search(c, q)
+	resp,err := h.service.Search(c, q)
+	if err!=nil{
+		c.JSON(500,gin.H{"error":"Search failed"})
+		return 
+	}
 	c.JSON(200, resp)
 }
 
 func (h *Handler) Simulate(c *gin.Context) {
-	_ = h.service.SimulateUpdate(c)
+	if err:= h.service.SimulateUpdate(c);err!=nil{
+		c.JSON(500,gin.H{"error":"update failed"})
+		return 
+	}
 	c.JSON(200, gin.H{"status": "updated"})
 }

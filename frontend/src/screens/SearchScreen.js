@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, ActivityIndicator, StyleSheet,TextInput} from 'react-native';
 import axios from 'axios';
 import UserRow from '../components/UserRow';
-import API_URL from "../api/client"
+import client from "../api/client"
 
 const SearchScreen = () => {
   const [query, setQuery] = useState('');
@@ -21,8 +21,8 @@ const SearchScreen = () => {
   const handleSearch = async (text) => {
     setLoading(true);
     try {
-      const res = await axios.get(`${API_URL}/search?q=${text}`);
-      console.log(res.data)
+      const res = await client.get(`/search?q=${text}`);
+      console.log("Resultant data",res.data)
       setResults(res.data);
     } catch (err) {
       console.error(err);

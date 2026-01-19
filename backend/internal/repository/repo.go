@@ -9,9 +9,9 @@ type Repo struct {
 	Leaderboard     LeaderboardRepository
 }
 
-func NewRepo(db *gorm.DB, rb RedisClient) *Repo {
+func NewRepo(db *gorm.DB, rb RedisClient, leaderboardKey string) *Repo {
 	return &Repo{
 		UserLeaderboard: NewUserRepo(db),
-		Leaderboard:     NewLeaderboardRepo(rb),
+		Leaderboard:     NewLeaderboardRepo(rb, leaderboardKey),
 	}
 }

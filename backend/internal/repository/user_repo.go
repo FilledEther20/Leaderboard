@@ -26,6 +26,7 @@ func (r *userRepo) Search(ctx context.Context, q string, limit int) ([]models.Us
 	err := r.db.WithContext(ctx).
 		Limit(limit).
 		Where("username ILIKE ?", "%"+q+"%").
+		Order("rating DESC").
 		Find(&users).Error
 	return users, err
 }

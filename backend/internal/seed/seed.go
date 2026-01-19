@@ -7,7 +7,6 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/FilledEther20/Leaderboard/internal/config"
 	"github.com/FilledEther20/Leaderboard/internal/models"
 	"github.com/brianvoe/gofakeit/v6"
 	"github.com/redis/go-redis/v9"
@@ -16,11 +15,11 @@ import (
 
 const seedCount = 10000
 
-func Run(db *gorm.DB, rdb *redis.Client) {
+func Run(db *gorm.DB, rdb *redis.Client, leaderboardKey string) {
 	ctx := context.Background()
 	log.Println("Cleaning Up...")
 
-	rdb.Del(ctx, config.LeaderboardKey)
+	rdb.Del(ctx, leaderboardKey)
 	if err := db.Exec("TRUNCATE TABLE users RESTART IDENTITY CASCADE").Error; err != nil {
 		log.Fatalf("Failed to truncate table: %v", err)
 	}
@@ -45,7 +44,7 @@ func Run(db *gorm.DB, rdb *redis.Client) {
 			Rating:   rating,
 		})
 
-		pipe.ZAdd(ctx, config.LeaderboardKey, redis.Z{
+		pipe.ZAdd(ctx, leaderboardKey, redis.Z{
 			Score:  float64(rating),
 			Member: username,
 		})

@@ -12,11 +12,12 @@ import (
 )
 
 func main() {
-	dbConn := db.Init(config.PostgresDSN)
-	rdb := redis.InitRedis(config.RedisAddr)
+	cfg := config.NewConfig()
+	dbConn := db.Init(cfg.PostgresDSN)
+	rdb := redis.InitRedis(cfg.ReddisAddr)
 
-	seed.Run(dbConn, rdb)
-	repo := repository.NewRepo(dbConn, rdb)
+	seed.Run(dbConn, rdb, cfg.LeaderboardKey)
+	repo := repository.NewRepo(dbConn, rdb, cfg.LeaderboardKey)
 	svc := service.New(repo)
 	h := handler.New(svc)
 

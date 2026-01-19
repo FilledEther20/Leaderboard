@@ -12,9 +12,9 @@ const TabButton = ({ title, active, onPress }) => (
 
 const styles = StyleSheet.create({
   tab: { flex: 1, padding: 12, alignItems: 'center', borderRadius: 8 },
-  activeTab: { backgroundColor: '#007AFF' },
+  activeTab: { backgroundColor: '#d9ff00' },
   tabText: { fontWeight: '600', color: '#666' },
-  activeTabText: { color: '#fff' },
+  activeTabText: { color: '#030202' },
 });
 
 export default TabButton;

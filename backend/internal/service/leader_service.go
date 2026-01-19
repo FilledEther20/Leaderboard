@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"math/rand"
+	"time"
 
 	"github.com/FilledEther20/Leaderboard/internal/repository"
 )
@@ -30,14 +31,19 @@ func (s *LeaderboardService) GetLeaderboard(ctx context.Context, page, limit int
 	if err != nil {
 		return nil, err
 	}
+	var lastRank int64 = 0
+	var lastScore float64 = -1
 
 	resp := []UserRankResponse{}
 	for _, z := range top {
-		rank, _ := s.repo.Leaderboard.GetRank(ctx, z.Score)
+		if z.Score != lastScore {
+			lastRank, _ = s.repo.Leaderboard.GetRank(ctx, z.Score)
+			lastScore = z.Score
+		}
 		resp = append(resp, UserRankResponse{
 			Username:   z.Member.(string),
 			Rating:     z.Score,
-			GlobalRank: rank + 1,
+			GlobalRank: lastRank + 1,
 		})
 	}
 	return resp, nil
@@ -81,9 +87,14 @@ func (s *LeaderboardService) SimulateUpdate(ctx context.Context) error {
 
 	newRating := rand.Intn(4901) + 100
 	_ = s.repo.Leaderboard.UpdateScore(ctx, user.Username, float64(newRating))
-	log.Default().Printf("User's new rating is %d", newRating)
-	go func(){
-		s.repo.UserLeaderboard.UpdateRating(ctx, user.ID, newRating)
+
+	bgCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	go func() {
+		defer cancel()
+		if err := s.repo.UserLeaderboard.UpdateRating(bgCtx, user.ID, newRating); err != nil {
+			log.Default().Printf("Error updating rating: %v", err)
+		}
+		log.Default().Printf("Rating updated successfully for user %s", user.Username)
 	}()
 	return nil
 }

@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/FilledEther20/Leaderboard/internal/config"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -24,28 +23,29 @@ type LeaderboardRepository interface {
 }
 
 type leaderboardRepo struct {
-	rdb RedisClient
+	rdb            RedisClient
+	leaderboardKey string
 }
 
-func NewLeaderboardRepo(rdb RedisClient) LeaderboardRepository {
-	return &leaderboardRepo{rdb}
+func NewLeaderboardRepo(rdb RedisClient, leaderboardKey string) LeaderboardRepository {
+	return &leaderboardRepo{rdb, leaderboardKey}
 }
 
 func (r *leaderboardRepo) GetTop(ctx context.Context, start, stop int64) ([]redis.Z, error) {
-	return r.rdb.ZRevRangeWithScores(ctx, config.LeaderboardKey, start, stop).Result()
+	return r.rdb.ZRevRangeWithScores(ctx, r.leaderboardKey, start, stop).Result()
 }
 
 func (r *leaderboardRepo) GetRank(ctx context.Context, score float64) (int64, error) {
 	return r.rdb.ZCount(
 		ctx,
-		config.LeaderboardKey,
+		r.leaderboardKey,
 		fmt.Sprintf("(%f", score),
 		"+inf",
 	).Result()
 }
 
 func (r *leaderboardRepo) UpdateScore(ctx context.Context, username string, score float64) error {
-	return r.rdb.ZAdd(ctx, config.LeaderboardKey, redis.Z{
+	return r.rdb.ZAdd(ctx, r.leaderboardKey, redis.Z{
 		Score:  score,
 		Member: username,
 	}).Err()
@@ -56,7 +56,7 @@ func (r *leaderboardRepo) GetScores(ctx context.Context, usernames []string) (ma
 	cmds := map[string]*redis.FloatCmd{}
 
 	for _, u := range usernames {
-		cmds[u] = pipe.ZScore(ctx, config.LeaderboardKey, u)
+		cmds[u] = pipe.ZScore(ctx, r.leaderboardKey, u)
 	}
 	_, err := pipe.Exec(ctx)
 	if err != nil {
